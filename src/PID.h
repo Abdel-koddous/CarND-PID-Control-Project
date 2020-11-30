@@ -1,6 +1,8 @@
 #ifndef PID_H
 #define PID_H
 
+#include<vector>
+
 class PID {
  public:
   /**
@@ -31,6 +33,8 @@ class PID {
    */
   double TotalError();
 
+  void Twiddle(double numberOfSteps);
+
  private:
   /**
    * PID Errors
@@ -45,6 +49,22 @@ class PID {
   double Kp;
   double Ki;
   double Kd;
+
+  /**
+   * dp
+   */
+
+  std::vector<double> dp = {1, 1, 1};
+  
+  /**
+   *  best error
+   */
+  double best_score; 
+
+  /**
+   *  twiddle progress parameter to track algorithm steps across multiple runs
+   */
+  int twiddle_progress = 0;
 };
 
 #endif  // PID_H
