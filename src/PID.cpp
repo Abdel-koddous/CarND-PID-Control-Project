@@ -1,4 +1,5 @@
 #include "PID.h"
+#include <iostream>
 
 /**
  * TODO: Complete the PID class. You may add any additional desired functions.
@@ -45,41 +46,73 @@ void PID::Twiddle(double numberOfSteps) {
 
   switch ( twiddle_progress )
   {
-  case /* constant-expression */:
-    /* code */
-    break;
-  
-  default:
-    break;
-  }
-  Kp += dp[0];
-  // re - run car ... AFTER INCREASING Kp
+  case 0:
 
-  if (best_score < numberOfSteps)
-  {
-    best_score = numberOfSteps;
-    dp[0] *= 1.1;
-  }
-  else
-  {
-    Kp -= 2*dp[0];
-    
-    // re - run car ... AFTER DECREASING Kp
+    Kp += dp[0];
+    twiddle_progress = 1;
+
+    break;
+
+  case 1:
+
+    if (best_score < numberOfSteps)
+    {
+      best_score = numberOfSteps;
+      dp[0] *= 1.1; // increase the amount of change even more - Bump Up
+      Kp += dp[0];
+      
+      twiddle_progress = 1; 
+      std::cout << "Found a new best score ... let's bump UP !" << std::endl;
+    }
+    else
+    {
+      Kp -= 2*dp[0]; // explore the other side ( negative ) of Coef value - Bump Down
+      twiddle_progress = 2;
+      std::cout << "Not a best score let's bump down" << std::endl;
+    }
+
+    break;
+
+  
+  case 2:
+
     if( best_score < numberOfSteps )
     {
       best_score = numberOfSteps;
       dp[0] *= 1.1;
+      Kp += dp[0];
+      std::cout << "Found a new best score after bumping DOWN ! " << std::endl; 
+      
     }
     else
     {
-      Kp += dp[0];
+      Kp += dp[0]; // go back to initial Kp
       dp[0] *= 0.9;
+      Kp += dp[0];
+      std::cout << "Bumping DOWN didn't give a better score either ... Reducing my intervall" << std::endl;
     }
     
+    twiddle_progress = 1;
+
+    break;
+
+  default:
+    break;
   }
-  
-  Kp += 0.05;
-  
+
+  // DEBUG
+  std::cout << "Parameters after twiddle algorithm " << Kp << 
+  " - Best score " << best_score << " - Current score " << numberOfSteps << std::endl;
+
+}
+
+std::vector<double> PID::getPIDCoefs() {
+  /**
+   * A getter for the PID coefs
+   */
+  std::vector<double> pidCoefs = {Kp, Ki, Kd};
+
+  return pidCoefs;
 }
 
 double PID::TotalError() {

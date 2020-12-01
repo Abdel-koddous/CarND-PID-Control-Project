@@ -49,7 +49,7 @@ int main( int argc, char *argv[] ){
 
 
   int numberOfRuns = 0;
-  int maxRuns = 5;
+  int maxRuns = 50;
   std::vector<int> stepsCount(maxRuns, 0); /// vector of length maxRuns initilized with 0
   bool inTrack = true;
   h.onMessage([&pid, &stepsCount, &inTrack, &numberOfRuns, &maxRuns](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, 
@@ -103,7 +103,12 @@ int main( int argc, char *argv[] ){
               std::cout << "Restarting car from initial position ... sleeping" << std::endl;
 
               // apply twiddle algo to change pid parameters ...
-              pid.Twiddle();
+              
+              pid.Twiddle(stepsCount[numberOfRuns]);
+              
+              vector<double> newPIDCoefs = pid.getPIDCoefs();
+
+              sleep(10);
 
               numberOfRuns ++;
 
