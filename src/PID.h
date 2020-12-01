@@ -35,6 +35,8 @@ class PID {
 
   void Twiddle(double numberOfSteps);
 
+  std::vector<double> getPIDCoefs();
+
  private:
   /**
    * PID Errors
@@ -54,7 +56,7 @@ class PID {
    * dp
    */
 
-  std::vector<double> dp = {1, 1, 1};
+  std::vector<double> dp = {0.01, 0.01, 0.01};
   
   /**
    *  best error
