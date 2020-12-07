@@ -55,8 +55,8 @@ class PID {
   /**
    * dp
    */
-
-  std::vector<double> dp = {0.01, 0.01, 0.01};
+  std::vector<double> p;
+  std::vector<double> dp;
   
   /**
    *  best error
@@ -66,7 +66,9 @@ class PID {
   /**
    *  twiddle progress parameter to track algorithm steps across multiple runs
    */
-  int twiddle_progress = 0;
+  int twiddle_progress;
+  int pidCoef_index;
+  
 };
 
 #endif  // PID_H

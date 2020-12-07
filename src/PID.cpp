@@ -23,6 +23,12 @@ void PID::Init(double Kp_, double Ki_, double Kd_) {
 
   best_score = 0;
 
+  p = {Kp, Ki, Kd};
+  dp = {0.01, 0, 0.5};
+
+  twiddle_progress = 0;
+  pidCoef_index = 0;
+
 }
 
 void PID::UpdateError(double cte) {
@@ -37,71 +43,92 @@ void PID::UpdateError(double cte) {
 
 }
 
-void PID::Twiddle(double numberOfSteps) {
+void PID::Twiddle( double numberOfSteps ) {
   /**
    * Updates PID coef using twiddle algorithm
    */
 
   // numberOfSteps is the result of the last car run
-
+  //DEBUG
+  std::cout << "--- Twiddle Algorithm step running --- Step " << twiddle_progress << " --- " 
+  << std::endl;
+  
   switch ( twiddle_progress )
   {
+    
   case 0:
 
-    Kp += dp[0];
+    std::cout << " --- Fine tuning pid index " << pidCoef_index << " ---" << std::endl;
+    p[pidCoef_index] += dp[pidCoef_index];
     twiddle_progress = 1;
 
+    if( best_score < numberOfSteps ) { best_score = numberOfSteps; }
+    // reset simulator
     break;
 
   case 1:
 
     if (best_score < numberOfSteps)
     {
-      best_score = numberOfSteps;
-      dp[0] *= 1.1; // increase the amount of change even more - Bump Up
-      Kp += dp[0];
-      
-      twiddle_progress = 1; 
       std::cout << "Found a new best score ... let's bump UP !" << std::endl;
+
+      best_score = numberOfSteps;
+      dp[pidCoef_index] *= 1.1; // increase the amount of change even more - Bump Up
+      
+      pidCoef_index = ( pidCoef_index + 1 ) % 3; // move to next pid coef
+      pidCoef_index = (pidCoef_index == 1) ? 2 : pidCoef_index; // Not tuning Ki
+
+      p[pidCoef_index] += dp[pidCoef_index];
+
+      twiddle_progress = 1;
     }
     else
     {
-      Kp -= 2*dp[0]; // explore the other side ( negative ) of Coef value - Bump Down
-      twiddle_progress = 2;
       std::cout << "Not a best score let's bump down" << std::endl;
+
+      p[pidCoef_index] -= 2*dp[pidCoef_index]; // explore the other side ( negative ) of Coef value - Bump Down
+      
+      twiddle_progress = 2;
     }
 
+    // reset simulator
     break;
-
   
   case 2:
 
     if( best_score < numberOfSteps )
     {
-      best_score = numberOfSteps;
-      dp[0] *= 1.1;
-      Kp += dp[0];
       std::cout << "Found a new best score after bumping DOWN ! " << std::endl; 
-      
+
+      best_score = numberOfSteps;
+      dp[pidCoef_index] *= 1.1;
     }
     else
     {
-      Kp += dp[0]; // go back to initial Kp
-      dp[0] *= 0.9;
-      Kp += dp[0];
       std::cout << "Bumping DOWN didn't give a better score either ... Reducing my intervall" << std::endl;
+
+      p[pidCoef_index] += dp[pidCoef_index]; // go back to initial Kp
+      dp[pidCoef_index] *= 0.9;
     }
     
-    twiddle_progress = 1;
+    pidCoef_index = ( pidCoef_index + 1 ) % 3; // move to next pid coef  
+    pidCoef_index = (pidCoef_index == 1) ? 2 : pidCoef_index; // Not tuning Ki
+  
+    p[pidCoef_index] += dp[pidCoef_index];
 
-    break;
+    twiddle_progress = 1;
+    // no break here to jump to case 0 before resetting simulator
 
   default:
     break;
   }
 
+  Kp = p[0];
+  Ki = p[1];
+  Kd = p[2];
+
   // DEBUG
-  std::cout << "Parameters after twiddle algorithm " << Kp << 
+  std::cout << "Parameters after twiddle algorithm " << Kp << " - " << Ki << " - " << Kd << 
   " - Best score " << best_score << " - Current score " << numberOfSteps << std::endl;
 
 }
