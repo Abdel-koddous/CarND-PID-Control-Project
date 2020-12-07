@@ -41,18 +41,19 @@ int main( int argc, char *argv[] ){
    * TODO: Initialize the pid variable.
    */
 
-  double init_Kp = atof( argv[1] ); // 1;
-  double init_Ki = atof( argv[2] ); // 0;
-  double init_kd = atof( argv[3] ); //0;
+  double init_Kp = 0.16; // atof( argv[1] )
+  double init_Ki = 0; //atof( argv[2] );
+  double init_kd = 4.5; //atof( argv[3] ); //0;
 
   pid.Init( init_Kp, init_Ki, init_kd);
+  bool runTwiddle = true;
 
 
   int numberOfRuns = 0;
   int maxRuns = 50;
   std::vector<int> stepsCount(maxRuns, 0); /// vector of length maxRuns initilized with 0
   bool inTrack = true;
-  h.onMessage([&pid, &stepsCount, &inTrack, &numberOfRuns, &maxRuns](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, 
+  h.onMessage([&pid, &stepsCount, &inTrack, &numberOfRuns, &maxRuns, &runTwiddle](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, 
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -78,37 +79,37 @@ int main( int argc, char *argv[] ){
            *   Maybe use another PID controller to control the speed!
            */
           
+          double track_treshold = 2.3;
 
           if ( inTrack )
           {
-            if( abs(cte) < 2 )
+            if( abs(cte) < track_treshold )
             {
               pid.UpdateError(cte);
               steer_value = pid.TotalError();
-
-              //double controlled_speed = 25 - 5 * abs(cte);
-              
 
               stepsCount[numberOfRuns]++;
 
             }
             else if ( stepsCount[numberOfRuns] > 0 ) // Car considered outside of track only if actual steps were run
             {
-              std::cout << "---- Outside of track -----" << cte << std::endl;
+              // DEBUG
+              // std::cout << "---- Outside of track -----" << cte << std::endl;
 
-              //inTrack = false;
               std::cout << "Car went out of the track after " << stepsCount[numberOfRuns] << " steps ... " << std::endl;
+
+              // Apply twiddle alogrithm single step to tune PID  hyperparameters ...             
+              if( runTwiddle )
+              {                
+                pid.Twiddle(stepsCount[numberOfRuns]);
+              }
+
+              
+              // Reset simulator
               std::string reset_msg = "42[\"reset\",{}]";
               ws.send(reset_msg.data(), reset_msg.length(), uWS::OpCode::TEXT);
-              std::cout << "Restarting car from initial position ... sleeping" << std::endl;
-
-              // apply twiddle algo to change pid parameters ...
-              
-              pid.Twiddle(stepsCount[numberOfRuns]);
-              
-              vector<double> newPIDCoefs = pid.getPIDCoefs();
-
-              sleep(10);
+              std::cout << "Restarting car from initial position ... " << std::endl;
+              sleep(5);
 
               numberOfRuns ++;
 
@@ -124,13 +125,14 @@ int main( int argc, char *argv[] ){
             json msgJson;
             msgJson["steering_angle"] = steer_value;
             msgJson["throttle"] = 0.4;
+            
 
             // DEBUG
-            std::cout << "CTE: " << cte << " Steering Value: " << steer_value << " Run: " << numberOfRuns
-                      << std::endl;
+            //std::cout << "CTE: " << cte << " Steering Value: " << steer_value << " Run: " << numberOfRuns
+            //          << std::endl;
 
             auto msg = "42[\"steer\"," + msgJson.dump() + "]";
-            std::cout << msg << std::endl;
+            //std::cout << msg << std::endl;
             ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
           }
 
