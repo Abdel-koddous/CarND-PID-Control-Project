@@ -46,7 +46,7 @@ int main( int argc, char *argv[] ){
   double init_kd = 4.5; //atof( argv[3] ); //0;
 
   pid.Init( init_Kp, init_Ki, init_kd);
-  bool runTwiddle = true;
+  bool runTwiddle = false;
 
 
   int numberOfRuns = 0;
@@ -69,8 +69,8 @@ int main( int argc, char *argv[] ){
         if (event == "telemetry") {
           // j[1] is the data JSON object
           double cte = std::stod(j[1]["cte"].get<string>());
-          double speed = std::stod(j[1]["speed"].get<string>());
-          double angle = std::stod(j[1]["steering_angle"].get<string>());
+          //double speed = std::stod(j[1]["speed"].get<string>());
+          //double angle = std::stod(j[1]["steering_angle"].get<string>());
           double steer_value;
           /**
            * TODO: Calculate steering value here, remember the steering value is
@@ -124,7 +124,7 @@ int main( int argc, char *argv[] ){
             
             json msgJson;
             msgJson["steering_angle"] = steer_value;
-            msgJson["throttle"] = 0.4;
+            msgJson["throttle"] = 0.2;
             
 
             // DEBUG
