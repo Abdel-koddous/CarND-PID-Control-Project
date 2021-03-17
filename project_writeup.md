@@ -5,7 +5,7 @@
 [image3]: ./videos/writeup_gif/Kp0_25.gif "Kp = 0.25"
 [image4]: ./videos/writeup_gif/Kp0_25-Kd5.gif "Kp = 0.25 & Kd = 5"
 [image5]: ./videos/writeup_gif/full_lap.gif "Kp = 0.16 & Kd = 5"
-
+[gif1]: https://upload.wikimedia.org/wikipedia/commons/3/33/PID_Compensation_Animated.gif "Wikipedia PID parameters effect gif"
 The goal of this project is to implement and tune a PID controller for the steering angle of a car driving along a track in Udacity term 2 simulator. The work on this project is orgamised as follows:
 
 1. PID controller implemetation.
@@ -45,7 +45,15 @@ Kp = 1         |  Kp = 0.25
 
 * Since I wasn't able to see a significant positive effect when playing with the integral term, I kept it value at 0.
 
-* I Ended up my manual tuning phase with the following set of hyperparameters `Kp = 0.2, Ki = 0, kd =  5`.
+* I ended up my manual tuning phase with the following set of hyperparameters `Kp = 0.2, Ki = 0, kd =  5`.
+
+To sum up: P component recovers the car when I have a large CTE. But when CTE becomes small (Car near the center) it causes a lot of overshoot and oscillation, For this the D component helps to reduce the overshoot by anticipating the fact that we're getting close to a CTE = 0. In my implemtation I didn't make use of the I component, but in a general use case it helps to remove the static error and bring the final behavior around the target value.
+
+To illustrate better this here is animation I was able to find on Wikipedia for the various PID components effects.
+
+![alt text][gif1]
+
+* GIF source on [wikipedia](https://en.wikipedia.org/wiki/PID_controller).
 
 
 ## 3. Twiddle algorithm for hyperparameters tuning:  
